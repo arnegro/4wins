@@ -107,7 +107,7 @@ def test_connected_four_no_4_connected():
     assert not connected_four(board, PLAYER2)
 
 
-def test_connected_four_horizontal():
+def test_connected_four_vertical():
     from agents.game_utils import connected_four
     board = initialize_game_state(shape=(6, 7))
     for i in range(4):
@@ -116,12 +116,12 @@ def test_connected_four_horizontal():
     assert connected_four(board, PLAYER1)
 
 
-def test_connected_four_vertical():
+def test_connected_four_horizontal():
     from agents.game_utils import connected_four
     board = initialize_game_state(shape=(6, 7))
     for i in range(4):
         i = PlayerAction(i)
-        board[0, i] = PLAYER1
+        board[0, i+3] = PLAYER1
     assert connected_four(board, PLAYER1)
 
 
