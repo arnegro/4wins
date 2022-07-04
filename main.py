@@ -1,7 +1,7 @@
 from typing import Callable
 from agents.game_utils import GenMove
 from agents.agent_human_user import user_move
-from agents.agent_minimax import generate_move, base_heuristic
+from agents.agent_mcts import generate_move, UCB1, Beta
 
 
 def human_vs_agent(
@@ -57,5 +57,7 @@ def human_vs_agent(
                     break
 
 
+# logic = UCB1(progressbar=True, iterations=10000, verbose=True, time_based=False)
+logic = Beta(progressbar=True, iterations=3000, verbose=True, time_based=False)
 if __name__ == "__main__":
-    human_vs_agent(user_move, generate_move, args_2=(5, base_heuristic))
+    human_vs_agent(user_move, generate_move, args_2=(logic,))

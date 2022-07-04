@@ -2,6 +2,7 @@ from enum import Enum
 import numpy as np
 from scipy.signal import convolve2d
 from typing import List, Callable, Tuple, Optional
+import numba
 
 
 BoardPiece = np.int8  # The data type (dtype) of the board
@@ -93,7 +94,7 @@ def apply_player_action(board: np.ndarray, action: PlayerAction, player: BoardPi
     back or copied beforehand).
     :rtype: object
     """
-    if action not in get_legal_moves(board):
+    if action not in _get_legal_moves(board):
         raise ValueError(f'column {action} is not an admissible action')
     col = board[:, action]
     fill_level = np.argmin(np.where(col == NO_PLAYER, 0, 1))
@@ -102,7 +103,9 @@ def apply_player_action(board: np.ndarray, action: PlayerAction, player: BoardPi
     return board
 
 
-def get_legal_moves(board: np.ndarray) -> List[PlayerAction]:
+@numba.njit()
+def _get_legal_moves(board: np.ndarray) -> List[PlayerAction]:
+    """Takes a board and returns all possible columns in which a move could be applied"""
     _, cols = board.shape
     return [PlayerAction(col) for col in range(cols) if board[-1, col] == NO_PLAYER]
 
@@ -110,36 +113,72 @@ def get_legal_moves(board: np.ndarray) -> List[PlayerAction]:
 ##########################################################################################
 # CHECKING
 
-def connected_four(board: np.ndarray, player: BoardPiece) -> bool:
-    """
-    Returns True if there are four adjacent pieces equal to `player` arranged
-    in either a horizontal, vertical, or diagonal line. Returns False otherwise.
-    """
-    board_pl = board == player
-    return _check_horizontal(board_pl) \
-        or _check_vertical(board_pl) \
-        or _check_diagonal_ascending(board_pl) \
-        or _check_diagonal_descending(board_pl)
+
+# two different options of checking the board -- one based on numba and manual iteration, one based on convolution
+# -> mainly for demonstration purposes
+USE_NUMBA = True
+
+if USE_NUMBA:
+
+    @numba.njit()
+    def connected_four(board: np.ndarray, player: BoardPiece) -> bool:
+        """
+        Returns True if there are four adjacent pieces equal to `player` arranged
+        in either a horizontal, vertical, or diagonal line. Returns False otherwise.
+        """
+        rows, cols = board.shape
+        board = board == player
+        x = 4
+        for i in range(rows):  # horizontal
+            for j in range(cols - x + 1):
+                if np.all(board[i, j:j + x]):
+                    return True
+
+        for i in range(rows - x + 1):  # vertical
+            for j in range(cols):
+                if np.all(board[i:i + x, j]):
+                    return True
+
+        for i in range(rows - x + 1):  # diagonals
+            for j in range(cols - x + 1):
+                block = board[i:i + x, j:j + x]
+                if np.all(np.diag(block)) or np.all(np.diag(block[::-1, :])):
+                    return True
+
+        return False
+
+else:
+
+    def connected_four(board: np.ndarray, player: BoardPiece) -> bool:
+        """
+        Returns True if there are four adjacent pieces equal to `player` arranged
+        in either a horizontal, vertical, or diagonal line. Returns False otherwise.
+        """
+        board_pl = board == player
+        return _check_horizontal(board_pl) \
+            or _check_vertical(board_pl) \
+            or _check_diagonal_ascending(board_pl) \
+            or _check_diagonal_descending(board_pl)
 
 
-def _check_horizontal(board: np.ndarray) -> bool:
-    kernel = np.ones((4, 1))
-    conv = convolve2d(board, kernel, mode='valid')
-    return (conv == 4).any()
+    def _check_horizontal(board: np.ndarray) -> bool:
+        kernel = np.ones((4, 1))
+        conv = convolve2d(board, kernel, mode='valid')
+        return (conv == 4).any()
 
 
-def _check_vertical(board: np.ndarray) -> bool:
-    return _check_horizontal(board.T)
+    def _check_vertical(board: np.ndarray) -> bool:
+        return _check_horizontal(board.T)
 
 
-def _check_diagonal_ascending(board: np.ndarray) -> bool:
-    kernel = np.eye(4)
-    conv = convolve2d(board, kernel, mode='valid')
-    return (conv == 4).any()
+    def _check_diagonal_ascending(board: np.ndarray) -> bool:
+        kernel = np.eye(4)
+        conv = convolve2d(board, kernel, mode='valid')
+        return (conv == 4).any()
 
 
-def _check_diagonal_descending(board: np.ndarray) -> bool:
-    return _check_diagonal_ascending(np.fliplr(board))
+    def _check_diagonal_descending(board: np.ndarray) -> bool:
+        return _check_diagonal_ascending(np.fliplr(board))
 
 
 def check_end_state(board: np.ndarray, player: BoardPiece) -> GameState:
@@ -149,7 +188,7 @@ def check_end_state(board: np.ndarray, player: BoardPiece) -> GameState:
     or is play still ongoing (GameState.STILL_PLAYING)?
     """
     won = connected_four(board, player)
-    board_full = len(get_legal_moves(board)) == 0
+    board_full = len(_get_legal_moves(board)) == 0
     if won:
         return GameState.IS_WIN
     elif board_full:

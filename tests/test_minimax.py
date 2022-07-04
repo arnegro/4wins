@@ -1,5 +1,5 @@
-import numpy as np
-from agents.game_utils import string_to_board, PLAYER1, PLAYER2, NO_PLAYER, initialize_game_state
+from agents.game_utils import string_to_board, PLAYER1, PLAYER2, initialize_game_state
+
 
 printed_board = \
     ("|==============|\n"
@@ -18,7 +18,8 @@ def test_alpha_beta_takes_win_pl1():
     from agents.agent_minimax.minimax import generate_move_minimax
     from agents.agent_minimax import base_heuristic
     action, _ = generate_move_minimax(board, PLAYER1, saved_state=None,
-                                      depth=3, heuristic=base_heuristic)
+                                      depth=3, heuristic=base_heuristic,
+                                      max_time=None)
     assert action == 3
 
 
@@ -26,7 +27,8 @@ def test_alpha_beta_prevent_lose_pl2():
     from agents.agent_minimax.minimax import generate_move_minimax
     from agents.agent_minimax import base_heuristic
     action, _ = generate_move_minimax(board, PLAYER2, saved_state=None,
-                                      depth=3, heuristic=base_heuristic)
+                                      depth=3, heuristic=base_heuristic,
+                                      max_time=None)
     assert action == 3
 
 
@@ -37,7 +39,8 @@ def test_alpha_beta_takes_win_pl2():
     inv_board[board == PLAYER1] = PLAYER2
     inv_board[board == PLAYER2] = PLAYER1
     action, _ = generate_move_minimax(inv_board, PLAYER2, saved_state=None,
-                                      depth=3, heuristic=base_heuristic)
+                                      depth=3, heuristic=base_heuristic,
+                                      max_time=None)
     assert action == 3
 
 
@@ -48,8 +51,22 @@ def test_alpha_beta_prevent_lose_pl1():
     inv_board[board == PLAYER1] = PLAYER2
     inv_board[board == PLAYER2] = PLAYER1
     action, _ = generate_move_minimax(inv_board, PLAYER1, saved_state=None,
-                                      depth=3, heuristic=base_heuristic)
+                                      depth=3, heuristic=base_heuristic,
+                                      max_time=None)
     assert action == 3
+
+
+def test_alpha_beta_exit_after_x_sec():
+    """This may fail, function is not fail-safe!"""
+    from agents.agent_minimax.minimax import generate_move_minimax
+    from agents.agent_minimax import base_heuristic
+    import time
+    for max_time in range(2, 7):
+        t0 = time.time()
+        _, _ = generate_move_minimax(board, PLAYER1, saved_state=None,
+                                     depth=3, heuristic=base_heuristic,
+                                     max_time=max_time)
+        assert time.time() - t0 < max_time, f'{max_time=}'
 
 
 def test_x_in_a_row():
