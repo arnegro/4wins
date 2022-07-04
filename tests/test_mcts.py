@@ -1,6 +1,6 @@
 from agents.agent_mcts.mcts \
     import _move_root, _find_connecting_action_sequence, \
-    _select_and_expand, _get_legal_moves, _simulate, _get_move, _propagate_up
+    _select_and_expand, _get_legal_moves, _simulate, _propagate_up
 from agents.agent_mcts.searchtree import SearchTree, _OTHER_PLAYER
 from agents.agent_mcts import generate_move
 from agents.agent_mcts.mcts_logics import UCB1, Beta
@@ -135,14 +135,6 @@ def test_propagate_up():
         assert node.stats['w'] == mv+1
         assert node.stats['s'] == 11
         node = node.parent
-
-
-def test_get_move():
-    board = initialize_game_state()
-    col = 2
-    board[:3, col] = PLAYER1
-    assert _get_move(board, PLAYER1) == col
-    assert _get_move(board, PLAYER2) == col
 
 
 def test_simulate_non_biased():

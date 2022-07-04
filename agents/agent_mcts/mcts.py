@@ -4,6 +4,8 @@ from typing import Optional, Tuple, Callable, Dict, List
 from agents.agent_mcts.searchtree import SearchTree, Stats, _OTHER_PLAYER
 from agents.agent_mcts.mcts_logics import MCTSLogic, UCB1
 
+
+# TYPES ################################################################################################################
 SelectionFunction = Callable[[Stats, Stats, BoardPiece],  # node stats, parent stats  # ->
                              float]
 
@@ -15,6 +17,7 @@ ActionChoiceFunction = Callable[[Dict[PlayerAction, Stats], BoardPiece],  # ->
                                 PlayerAction]
 
 
+# GENERATE MOVE ########################################################################################################
 def generate_move_mcts(
         board: np.ndarray, player: BoardPiece, saved_state: Optional[SearchTree],
         logic: MCTSLogic = UCB1()
@@ -28,8 +31,7 @@ def generate_move_mcts(
     for _ in logic.get_iter():
         _monte_carlo_tree_search(search_tree, logic.select, logic.update)
 
-    move_stats = {move: child.stats for move, child in search_tree.children.items()
-                  if move in _get_legal_moves(board)}  # this shouldn't be necessary, just for safety
+    move_stats = {move: child.stats for move, child in search_tree.children.items()}
     next_action = logic.choose_action(move_stats, player)
 
     return next_action, search_tree
@@ -43,6 +45,7 @@ def _monte_carlo_tree_search(
     _propagate_up(terminal_node, winner, update_function)
 
 
+# MOVE ROOT ############################################################################################################
 def _move_root(
         search_tree: SearchTree, board: np.ndarray
 ) -> SearchTree:
@@ -83,6 +86,7 @@ def _is_possible_predecessor(board0: np.ndarray, board1: np.ndarray) -> bool:
     return board0_empty_match and board1_non_empty_match
 
 
+# SELECT AND EXPAND ####################################################################################################
 def _select_and_expand(
         search_tree: SearchTree, selection_function: SelectionFunction
 ) -> Tuple[SearchTree, np.ndarray]:
@@ -107,15 +111,9 @@ def _selection_helper(
         return _selection_helper(node.children[move], board, selection_function)
 
 
-def _get_legal_moves(board: np.ndarray) -> np.ndarray:
-    """Takes a board and returns all possible columns in which a move could be applied"""
-    mvs = np.argwhere(board[-1] == NO_PLAYER).flatten()
-    return mvs
-
-
+# SIMULATE #############################################################################################################
 def _simulate(board: np.ndarray, player: BoardPiece) -> BoardPiece:
     while check_end_state(board, _OTHER_PLAYER[player]) == GameState.STILL_PLAYING:
-        # move = _get_move(board, player)
         move = np.random.choice(_get_legal_moves(board))
         board = apply_player_action(board, move, player)
         player = _OTHER_PLAYER[player]
@@ -127,19 +125,17 @@ def _simulate(board: np.ndarray, player: BoardPiece) -> BoardPiece:
         return NO_PLAYER
 
 
-def _get_move(board: np.ndarray, player: BoardPiece) -> PlayerAction:
-    moves = _get_legal_moves(board)
-    for move in moves:
-        for player in [player, _OTHER_PLAYER[player]]:
-            new_board = apply_player_action(board, move, player)
-            if check_end_state(new_board, player) == GameState.IS_WIN:
-                return move
-    return np.random.choice(moves)
-
-
+# PROPAGATE UP #########################################################################################################
 # in place
 def _propagate_up(terminal_node: SearchTree, winner: BoardPiece, update_function: UpdateFunction) -> None:
     node = terminal_node
     while node is not None:
         node.stats = update_function(node.stats, winner)
         node = node.parent
+
+
+# HELPERS ##############################################################################################################
+def _get_legal_moves(board: np.ndarray) -> np.ndarray:
+    """Takes a board and returns all possible columns in which a move could be applied"""
+    mvs = np.argwhere(board[-1] == NO_PLAYER).flatten()
+    return mvs

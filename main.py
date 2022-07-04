@@ -57,7 +57,9 @@ def human_vs_agent(
                     break
 
 
+# progressbar doesnt show in pycharm! -- if true run main in terminal
+
 # logic = UCB1(progressbar=True, iterations=10000, verbose=True, time_based=False)
-logic = Beta(progressbar=True, iterations=3000, verbose=True, time_based=False)
+logic = Beta(progressbar=True, iterations=10000, verbose=True, time_based=False)
 if __name__ == "__main__":
     human_vs_agent(user_move, generate_move, args_2=(logic,))

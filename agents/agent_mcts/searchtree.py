@@ -2,6 +2,7 @@ import numpy as np
 from agents.game_utils import SavedState, BoardPiece, PlayerAction, PLAYER1, PLAYER2
 from typing import Optional, Dict
 
+
 _OTHER_PLAYER = {PLAYER1: PLAYER2, PLAYER2: PLAYER1}
 Stats = Dict
 
@@ -31,6 +32,7 @@ class SearchTree(SavedState):
     def set_root_board(self, board: np.ndarray) -> None:
         self.root_board[:, :] = board
 
+    # TO STRING ########################################################################################################
     def __str__(self) -> str:
         children = [action for action in self.children.keys()]
         fields = f'stats: {self.stats}; player: {self.player}; children: {children}'
