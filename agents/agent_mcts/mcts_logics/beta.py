@@ -3,6 +3,7 @@ from agents.agent_mcts.searchtree import Stats
 from agents.game_utils import BoardPiece, PLAYER1, PLAYER2, PlayerAction
 from typing import Dict
 from scipy.stats import beta
+from scipy.special import digamma
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -21,9 +22,11 @@ class Beta(MCTSLogic):
         self.c = c
 
     def select(self, stats: Stats, parent_stats: Stats, player: BoardPiece) -> float:
-        # return Beta.quantile(self.quantile, stats['a'], stats['b'])  --> was an idea, didn't work...
+        # return Beta.quantile(self.quantile, stats['a'], stats['b'])
+        # return _mean_p_win(player, stats['a'], stats['b']) + Beta.expected_entropy_change(stats['a'], stats['b'])
+        #  --> some ideas, didn't work...
+        # so go back to use UCB1 :/
         n = lambda a, b, draw: a + b + draw - 2
-        # basically UCB1... --> find a way to use variance information nicely
         return _mean_p_win(player, stats['a'], stats['b']) + self.c * np.sqrt(np.log(n(**parent_stats)) / n(**stats))
 
     def update(self, stats: Stats, winner: BoardPiece) -> Stats:
@@ -86,6 +89,20 @@ class Beta(MCTSLogic):
     @staticmethod
     def quantile(q: float, a: int, b: int) -> float:
         return beta.ppf(q, a, b)
+
+    @staticmethod
+    def delta_entropy_delta_a(a: int, b:int) -> float:
+        return np.log(a / (a + b)) - digamma(a) + digamma(a + b) - 1 / (a + b)
+
+    @staticmethod
+    def delta_entropy_delta_b(a: int, b: int) -> float:
+        return Beta.delta_entropy_delta_a(a=b, b=a)
+
+    @staticmethod
+    def expected_entropy_change(a: int, b: int) -> float:
+        pr_lose = beta.cdf(0.5, a, b)  # Pr(p < 0.5)
+        pr_win = 1 - pr_lose
+        return pr_win * Beta.delta_entropy_delta_a(a, b) + pr_lose * Beta.delta_entropy_delta_b(a, b)
 
 
 def _mean_p_win(player: BoardPiece, a: int, b: int) -> float:
