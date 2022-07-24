@@ -34,6 +34,23 @@ def test_set_root_board():
         assert (node.root_board == new_board).all()
 
 
+def test_merge_trees():
+    search_tree1 = SearchTree(root_board=initialize_game_state(), player=PLAYER1)
+    search_tree2 = SearchTree(root_board=initialize_game_state(), player=PLAYER1)
+    for search_tree, mvs in [(search_tree1, [1, 4]), (search_tree2, [1, 3])]:
+        nodes = [search_tree]
+        for move in mvs:
+            nodes.append(nodes[-1].expand_child(move))
+    merged_tree = SearchTree.merge_trees(search_tree1, search_tree2, lambda stats1, stats2: {})
+    expected_tree = SearchTree(root_board=initialize_game_state(), player=PLAYER1)
+    node = expected_tree.expand_child(1)
+    for mv in [4, 3]:
+        node.expand_child(mv)
+    assert expected_tree.show_recursive() == merged_tree.show_recursive()
+
+
+
+
 # Test mcts ############################################################################################################
 
 def _make_board():
@@ -130,7 +147,7 @@ def test_propagate_up():
     terminal_node = node.expand_child(PlayerAction(0))
     _propagate_up(terminal_node, PLAYER1, UCB1().update)
     for n in [search_tree, terminal_node]:
-        assert n.stats == {'w': 1, 's': 1}
+        assert n.stats == {'draw': 0, 'w': 1, 's': 1}
     while node.parent is not None:
         assert node.stats['w'] == mv+1
         assert node.stats['s'] == 11

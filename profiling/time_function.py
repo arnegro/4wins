@@ -25,6 +25,24 @@ def get_boards(n):
     return boards
 
 
+def time_simulate():
+    from agents.agent_mcts.mcts import _simulate
+    number = 10 ** 4
+    ts = []
+    for board in get_boards(50):
+        res = timeit.timeit("_simulate(board, player)",
+                            setup="_simulate(board, player)",
+                            number=number,
+                            globals=dict(_simulate=_simulate,
+                                         board=board,
+                                         player=PLAYER1))
+        ts += [res/number]
+    print(f'_simulate {np.mean(ts) * 1e3 : .3f}±{np.std(ts) * 1e3 : .3f} ms per call')
+
+
+time_simulate()
+
+
 def time_x_in_a_row():
     from agents.agent_minimax.heuristics import _x_in_a_row
     number = 10**4
@@ -74,4 +92,4 @@ def time_alpha_beta():
               ' ms per call')
 
 
-time_alpha_beta()
+# time_alpha_beta()
