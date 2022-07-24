@@ -63,6 +63,15 @@ class MCTSLogic:
         for p in self._processes:
             p.start()
 
+    def terminate(self) -> None:
+        """
+        Terminate possibly started processes
+        """
+        if hasattr(self, '_processes'):
+            for p in self._processes:
+                p.kill()
+            delattr(self, '_processes')
+
     def select(self, stats: Stats, parent_stats: Stats, player: BoardPiece) -> float:
         """
         Function to select the successor in a traversal down selection process of a mcts

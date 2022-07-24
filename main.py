@@ -55,12 +55,14 @@ def human_vs_agent(
                         )
                     playing = False
                     break
+        print('thanks for the game!')
 
 
 # progressbar doesnt show in pycharm! -- if you want that run main in terminal
 
-logic = UCB1(progressbar=True, iterations=10000, verbose=True, time_based=False, num_processes=4)
+logic = UCB1(progressbar=True, iterations=10000, verbose=True, time_based=True, num_processes=4)
 #logic = Beta(progressbar=True, iterations=10000, verbose=True,
 #             time_based=True, num_processes=4)
 if __name__ == "__main__":
     human_vs_agent(user_move, generate_move, args_2=(logic,))
+    logic.terminate()

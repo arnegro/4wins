@@ -45,7 +45,7 @@ class Beta(MCTSLogic):
     ) -> Dict[PlayerAction, float]:
         # this plotting is just uglily hacked in -- no nice code structuring here
         # should be overriding MCTSLogic._show_action_vals, that has only the values and not the parameters in the
-        # dict though so would need to be refactored -- hasn't happened yet
+        # dict though so would need to be refactored
         if self.verbose:
             ps = np.linspace(0, 1, 102)[1:-1]
             if player != PLAYER1:
