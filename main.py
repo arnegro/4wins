@@ -2,6 +2,7 @@ from typing import Callable
 from agents.game_utils import GenMove
 from agents.agent_human_user import user_move
 from agents.agent_mcts import generate_move, UCB1, Beta
+# from agents.agent_minimax import generate_move, base_heuristic
 
 
 def human_vs_agent(
@@ -55,14 +56,18 @@ def human_vs_agent(
                         )
                     playing = False
                     break
-        print('thanks for the game!')
+    print('thanks for the game!')
+    return
 
 
 # progressbar doesnt show in pycharm! -- if you want that run main in terminal
 
-logic = UCB1(progressbar=True, iterations=10000, verbose=True, time_based=True, num_processes=4)
+logic = UCB1(progressbar=True, iterations=10000, verbose=True, time_based=True, num_processes=4, runtime=5)
+args_2 = (logic,)
+
+# args_2 = (5, base_heuristic, 5)
 #logic = Beta(progressbar=True, iterations=10000, verbose=True,
 #             time_based=True, num_processes=4)
 if __name__ == "__main__":
-    human_vs_agent(user_move, generate_move, args_2=(logic,))
+    human_vs_agent(user_move, generate_move, args_2=args_2)
     logic.terminate()

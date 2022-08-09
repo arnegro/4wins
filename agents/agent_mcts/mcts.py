@@ -149,9 +149,10 @@ def _selection_helper(
     :param selection_function: function by which the successor child in the traversal down is selected
     :return: newly expanded child, as well as the game state there
     """
-    if getattr(node, 'is_end_state', False):  # do not expand any child if the game is over in this node already
-        return node, board
     moves = _get_legal_moves(board)
+    # do not expand any child if the game is over in this node already
+    if len(moves) == 0 or getattr(node, 'is_end_state', False):
+        return node, board
     if len(moves) > len(node.children):
         move = np.random.choice([move for move in moves if move not in node.children])
         new_child = node.expand_child(move)
