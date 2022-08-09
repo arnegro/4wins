@@ -12,7 +12,7 @@ Heuristic = Callable[[np.ndarray], Value]
 
 def generate_move_minimax(
     board: np.ndarray, player: BoardPiece, saved_state: Optional[SavedState], depth: int,
-    heuristic: Heuristic, max_time: Optional[float]
+    heuristic: Heuristic, max_time: Optional[float] = None
 ) -> Tuple[PlayerAction, Optional[SavedState]]:
     """
     Function to generate a move based on the minimax algorithm.
