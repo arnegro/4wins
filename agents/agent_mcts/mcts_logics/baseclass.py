@@ -4,7 +4,7 @@ from agents.agent_mcts.searchtree import Stats, SearchTree
 from agents.game_utils import BoardPiece, PlayerAction
 import time
 import numpy as np
-from multiprocessing import Process, Queue
+import multiprocess as mp
 
 
 class MCTSLogic:
@@ -47,10 +47,10 @@ class MCTSLogic:
         :param f: function to call on incoming inputs
         :return: nothing
         """
-        self._input_queue = Queue()
-        self._output_queue = Queue()
+        self._input_queue = mp.Queue()
+        self._output_queue = mp.Queue()
 
-        def _run_process(q_in: Queue, q_out: Queue) -> None:
+        def _run_process(q_in: mp.Queue, q_out: mp.Queue) -> None:
             while True:
                 if not q_in.empty():
                     kwargs = q_in.get()
@@ -58,7 +58,7 @@ class MCTSLogic:
                     q_out.put(res)
                 time.sleep(self._sleep_time_process)
 
-        self._processes = [Process(target=_run_process, args=(self._input_queue, self._output_queue))
+        self._processes = [mp.Process(target=_run_process, args=(self._input_queue, self._output_queue))
                            for _ in range(self.num_processes)]
         for p in self._processes:
             p.start()
@@ -183,7 +183,7 @@ class MCTSLogic:
         else:
             iterator = range(self.iterations // self.num_processes)
             pbar = self._progressbar_iter
-        if (supress_pbar is None and self.progressbar) or (type(supress_pbar) is bool and not supress_pbar):
+        if self.progressbar and not supress_pbar:
             iterator = pbar(iterator)
         return iterator
 
@@ -234,6 +234,8 @@ class MCTSLogic:
             progress = f'{i} iterations in {dt:.2f}/{max_t:.2f}s'
             self._print_progressbar(done, progress, ts)
             yield t
+        with open(f'profiling/t-{self.num_processes}.dat', 'a') as fl:
+            fl.writelines(str(dt)+'\n' for dt in np.diff(ts[2:]))
         print()
 
     def _print_progressbar(self, done: float, progress: str, ts: List[float]) -> None:
