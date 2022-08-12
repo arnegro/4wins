@@ -34,7 +34,7 @@ class MCTSLogic:
         self.progressbar = progressbar
         self._len_progressbar: int = 20
         self._exit_time_buffer: float = 0.01  # s
-        self._sleep_time_process = 0.01
+        self._sleep_time_process: float = 0.01  # s
 
     def _init_processes(self, f: Callable) -> None:
         """
@@ -154,7 +154,7 @@ class MCTSLogic:
                 self._init_processes(_mcts)
 
             supress_pbar = False
-            for i in range(self.num_processes):
+            for _ in range(self.num_processes):
                 self._input_queue.put(dict(search_tree=search_tree, supress_pbar=supress_pbar))
                 supress_pbar = True
             search_trees = []
@@ -167,7 +167,7 @@ class MCTSLogic:
 
             return merged_tree
 
-    def get_iter(self, supress_pbar=None) -> Iterator:
+    def get_iter(self, supress_pbar=False) -> Iterator:
         """
         Get an iterable over which to loop for the individual mcts iterations.
         Will be a range if the number of iterations is specified (time_based=False),
@@ -234,8 +234,6 @@ class MCTSLogic:
             progress = f'{i} iterations in {dt:.2f}/{max_t:.2f}s'
             self._print_progressbar(done, progress, ts)
             yield t
-        with open(f'profiling/t-{self.num_processes}.dat', 'a') as fl:
-            fl.writelines(str(dt)+'\n' for dt in np.diff(ts[2:]))
         print()
 
     def _print_progressbar(self, done: float, progress: str, ts: List[float]) -> None:
